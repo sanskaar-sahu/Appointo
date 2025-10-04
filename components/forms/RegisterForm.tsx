@@ -65,7 +65,7 @@ const RegisterForm = ({ user }: { user: User }) => {
         email: values.email,
         phone: values.phone,
         birthDate: new Date(values.birthDate),
-        gender: values.gender,
+        gender: values.gender.toLowerCase(),
         address: values.address,
         occupation: values.occupation,
         emergencyContactName: values.emergencyContactName,
