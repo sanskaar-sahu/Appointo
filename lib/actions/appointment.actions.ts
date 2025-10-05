@@ -11,6 +11,7 @@ import {
   databases,
   messaging,
 } from "../appwrite.config";
+
 import { formatDateTime, parseStringify } from "../utils";
 
 //  CREATE APPOINTMENT
@@ -38,8 +39,15 @@ export const getRecentAppointmentList = async () => {
     const appointments = await databases.listDocuments(
       DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
-      [Query.orderDesc("$createdAt")]
+      [Query.orderDesc("$createdAt"), Query.limit(50)]
     );
+
+    for (const a of appointments.documents) {
+      if (typeof a.patient === "string") {
+        // optionally fetch the patient separately
+        a.patient = await databases.getDocument(DATABASE_ID!, "patients", a.patient);
+      }
+    }
 
     // const scheduledAppointments = (
     //   appointments.documents as Appointment[]
@@ -135,7 +143,7 @@ export const updateAppointment = async ({
 
     if (!updatedAppointment) throw Error;
 
-    const smsMessage = `Greetings from CarePulse. ${type === "schedule" ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!, timeZone).dateTime} with Dr. ${appointment.primaryPhysician}` : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!, timeZone).dateTime} is cancelled. Reason:  ${appointment.cancellationReason}`}.`;
+    const smsMessage = `Greetings from Appointo. ${type === "schedule" ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!, timeZone).dateTime} with Dr. ${appointment.primaryPhysician}` : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!, timeZone).dateTime} is cancelled. Reason:  ${appointment.cancellationReason}`}.`;
     await sendSMSNotification(userId, smsMessage);
 
     revalidatePath("/admin");
